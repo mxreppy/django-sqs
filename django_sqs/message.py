@@ -16,6 +16,7 @@ from django.contrib.contenttypes.models import ContentType
 class ModelInstanceMessage(boto.sqs.message.RawMessage):
     """SQS Message class that returns 
     """
+
     def __init__(self, queue=None, instance=None):
         boto.sqs.message.RawMessage.__init__(
             self, queue=queue, body=instance)
@@ -29,10 +30,10 @@ class ModelInstanceMessage(boto.sqs.message.RawMessage):
     def decode(self, value):
         try:
             app_label, model, pk = json.loads(base64.b64decode(value))
-        except Exception, e:
+        except Exception as e:
             self.__reason = "Error decoding payload: %s" % e
             return None
-            
+
         try:
             ct = ContentType.objects.get(app_label=app_label, model=model)
         except ContentType.DoesNotExist:

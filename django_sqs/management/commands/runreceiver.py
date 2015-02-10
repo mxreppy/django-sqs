@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand
 
 import django_sqs
 
+
 # null handler to avoid warnings
 class _NullHandler(logging.Handler):
     def emit(self, record):
@@ -17,6 +18,8 @@ _signals = {}
 for name in dir(signal):
     if name.startswith('SIG'):
         _signals[getattr(signal, name)] = name
+
+
 def _status_string(status):
     "Pretty status description for exited child."
 
@@ -37,6 +40,7 @@ def _status_string(status):
         return "Continued from stop"
 
     return "Unknown reason (%r)" % status
+
 
 class Command(BaseCommand):
     help = "Run Amazon SQS receiver for queues registered with django_sqs."
@@ -59,7 +63,7 @@ class Command(BaseCommand):
         make_option('--message-limit',
                     dest='message_limit', default=None, type='int',
                     metavar='N', help='Exit after processing N messages'),
-        )
+    )
 
     def handle(self, *queue_names, **options):
         self.validate()
@@ -69,6 +73,7 @@ class Command(BaseCommand):
 
         if options.get('daemonize', False):
             from django.utils.daemonize import become_daemon
+
             become_daemon(out_log=options.get('stdout_log', '/dev/null'),
                           err_log=options.get('stderr_log', '/dev/null'))
 
@@ -90,10 +95,11 @@ class Command(BaseCommand):
             # is needed again.  The goal is to make sure that every
             # process gets its own connection
             from django.db import connection
+
             connection.close()
 
             os.setpgrp()
-            children = {}               # queue name -> pid
+            children = {}  # queue name -> pid
             for queue_name in queue_names:
                 pid = self.fork_child(queue_name,
                                       options.get('message_limit', None))
@@ -104,7 +110,7 @@ class Command(BaseCommand):
                 pid, status = os.wait()
                 queue_name = children[pid]
                 _log.error("Child %d (%s) exited: %s" % (
-                    pid, children[pid], _status_string(status) ))
+                    pid, children[pid], _status_string(status)))
                 del children[pid]
 
                 pid = self.fork_child(queue_name)
@@ -113,7 +119,7 @@ class Command(BaseCommand):
 
     def fork_child(self, queue_name, message_limit=None):
         pid = os.fork()
-        if pid:                         # parent
+        if pid:  # parent
             return pid
         # child
         _log = logging.getLogger('django_sqs.runreceiver.%s' % queue_name)
@@ -131,11 +137,12 @@ class Command(BaseCommand):
             else:
                 message_limit_info = ' %d messages' % message_limit
 
-            print 'Receiving%s from queue %s%s...' % (
+            print('Receiving%s from queue %s%s...' % (
                 message_limit_info, queue_name,
                 ('.%s' % suffix if suffix else ''),
-                )
+            )
+            )
             rq.receive_loop(message_limit=message_limit,
                             suffix=suffix)
         else:
-            print 'Queue %s has no receiver, aborting.' % queue_name
+            print('Queue %s has no receiver, aborting.' % queue_name)

@@ -9,19 +9,23 @@ from django.conf import settings
 
 try:
     from django.db import connections
+
     CONNECTIONS = connections.all()
 except ImportError:
     from django.db import connection
+
     CONNECTIONS = (connection, )
+
 
 class _NullHandler(logging.Handler):
     def emit(self, record):
         pass
 
+
 if settings.DEBUG:
     boto_debug = 1
 else:
-    boto_debug=0
+    boto_debug = 0
 
 DEFAULT_VISIBILITY_TIMEOUT = getattr(
     settings, 'SQS_DEFAULT_VISIBILITY_TIMEOUT', 60)
@@ -33,6 +37,7 @@ POLL_PERIOD = getattr(
 class TimedOut(Exception):
     """Raised by timeout handler."""
     pass
+
 
 def sigalrm_handler(signum, frame):
     raise TimedOut()
@@ -49,7 +54,6 @@ class UnknownSuffixWarning(RuntimeWarning):
 
 
 class RegisteredQueue(object):
-
     class ReceiverProxy(object):
         """Callable object that sends message via appropriate SQS queue.
 
@@ -57,6 +61,7 @@ class RegisteredQueue(object):
         - direct - inner (decorated) function
         - registered_queue - a RegisteredQueue instance for this queue
         """
+
         def __init__(self, registered_queue):
             self.registered_queue = registered_queue
             self.direct = registered_queue.receiver
@@ -98,7 +103,7 @@ class RegisteredQueue(object):
         if suffix:
             if suffix not in self.suffixes:
                 warn("Unknown suffix %s" % suffix, UnknownSuffixWarning)
-            name = '%s__%s' % ( name, suffix )
+            name = '%s__%s' % (name, suffix)
         if self.prefix:
             return '%s__%s' % (self.prefix, name)
         else:
@@ -142,8 +147,8 @@ class RegisteredQueue(object):
         if self.receiver is None:
             raise Exception("Not configured to received messages.")
         if self.timeout:
-           signal.alarm(self.timeout)
-           signal.signal(signal.SIGALRM, sigalrm_handler)
+            signal.alarm(self.timeout)
+            signal.signal(signal.SIGALRM, sigalrm_handler)
         try:
             self.receiver(message)
         finally:
@@ -159,9 +164,8 @@ class RegisteredQueue(object):
                     signal.signal(signal.SIGALRM, signal.SIG_DFL)
             if self.close_database:
                 for connection in CONNECTIONS:
-                    print 'Closing', connection
+                    print('Closing', connection)
                     connection.close()
-
 
     def receive_single(self, suffix=None):
         """Receive single message from the queue.
@@ -202,14 +206,14 @@ class RegisteredQueue(object):
                         if self.delete_on_start:
                             q.delete_message(m)
                         self.receive(m)
-                    except KeyboardInterrupt, e:
+                    except KeyboardInterrupt as e:
                         raise e
                     except RestartLater:
                         self._log.debug("Restarting message handling")
                     except:
                         try:
                             body = repr(m.get_body())
-                        except Exception, e:
+                        except Exception as e:
                             body = "(cannot run %r.get_body(): %s)" % (m, e)
                         self._log.exception(
                             "Caught exception in receive loop for %s %s" % (
