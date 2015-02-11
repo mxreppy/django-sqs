@@ -13,8 +13,8 @@ if not getattr(settings, 'AWS_ACCESS_KEY_ID'):
 if not getattr(settings, 'AWS_SECRET_ACCESS_KEY'):
     raise ImproperlyConfigured('Missing setting "AWS_SECRET_ACCESS_KEY"')
 
-if settings.DEBUG and not getattr(settings, 'SQS_QUEUE_PREFIX'):
-    raise ImproperlyConfigured('Missing setting "SQS_QUEUE_PREFIX"')
+# if settings.DEBUG and not getattr(settings, 'SQS_QUEUE_PREFIX'):
+#     raise ImproperlyConfigured('Missing setting "SQS_QUEUE_PREFIX"')
 
 # Try to get regions, otherwise let to DefaultRegionName
 # TODO this is bad! never set settings on the fly, better provide an

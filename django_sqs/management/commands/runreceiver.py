@@ -82,7 +82,7 @@ class Command(BaseCommand):
                 f.write('%d\n' % os.getpid())
 
         if len(queue_names) == 1:
-            self.receive(queue_names[0],
+            self.receive(list(queue_names)[0],
                          suffix=options.get('suffix'),
                          message_limit=options.get('message_limit', None))
         else:
